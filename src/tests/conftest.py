@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 from unittest.mock import Mock
 
@@ -5,7 +6,9 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 from common.hackernews import HackerNewsItem, Type
+from common.topic import Topic
 from db.connection import Base
+from db.models import Story as StoryModel
 
 
 @pytest.fixture
@@ -34,6 +37,59 @@ def db_session(engine):
 def mock_hackernews_api():
     api = Mock()
     return api
+
+
+class FakeTopicModel:
+    fake_topics = [
+        Topic(id=1, name="AI", representation=[], representative_docs=[]),
+        Topic(id=2, name="Python", representation=[], representative_docs=[]),
+        Topic(id=3, name="Other", representation=[], representative_docs=[]),
+    ]
+    def fit(self, documents):
+        # no-op
+        return self
+
+    def transform(self, title):
+        if "AI" in title:
+            return (1,), (0.9,)
+        if "Python" in title:
+            return (2,), (0.9,)
+            return "programming"
+        return (3,), (0.9,)
+
+    def get_topic_info(self, topic_id):
+        return pd.DataFrame({
+            "Topic": [self.fake_topics[topic_id - 1].id],
+            "Name": [self.fake_topics[topic_id - 1].name],
+            "Representation": [self.fake_topics[topic_id - 1].representation],
+            "Representative_Docs": [self.fake_topics[topic_id - 1].representative_docs],
+        })
+
+
+@pytest.fixture
+def sample_db_stories():
+    return [
+        StoryModel(
+            id=1,
+            hacker_news_id=1,
+            title="AI Lives Rent Free In My Head",
+        ),
+        StoryModel(
+            id=2,
+            hacker_news_id=2,
+            title="Python is cool, but my favorite language is Sarcasm",
+        ),
+    ]
+
+
+@pytest.fixture
+def populated_db_session(
+        db_session,
+        sample_db_stories
+):
+    db_session.add_all(sample_db_stories)
+    db_session.commit()
+    return db_session
 
 
 @pytest.fixture
