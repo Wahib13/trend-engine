@@ -1,12 +1,10 @@
 import logging
-from typing import List
 
-from bertopic import BERTopic
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from common.topic import Topic
-from db.models import Story as StoryModel
+from db.models import Article as ArticleModel
 from db.models import Topic as TopicModel
 
 logger = logging.getLogger(__name__)
@@ -39,20 +37,20 @@ def get_or_create_db_topic(
 
 def retrain(
         session: Session,
-        model: BERTopic,
+        model,
 ):
     titles = session.execute(
-        select(StoryModel.title)
+        select(ArticleModel.title)
     ).scalars().all()
     model.fit(titles)
     return model
 
 
 def run_inference(
-        model: BERTopic,
+        model,
         session: Session,
 ):
-    db_stories = session.query(StoryModel).all()
+    db_stories = session.query(ArticleModel).all()
     for story in db_stories:
         topic_ = get_topic(model, story)
         logger.info(f"found topic: {topic_}")
@@ -65,7 +63,7 @@ def run_inference(
 
 def run_clustering(
         session: Session,
-        model: BERTopic
+        model,
 ):
     """
     trains a new version of the model on the entire ingested story titles and runs inference on each of them
