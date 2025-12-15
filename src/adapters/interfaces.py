@@ -7,9 +7,9 @@ from common.hackernews import HackerNewsItem
 class HackerNewsAPIInterface(ABC):
 
     @abstractmethod
-    def fetch_articles(self, **kwargs) -> List[int]:
+    def fetch_hacker_news_items(self, **kwargs) -> List[int]:
         pass
 
     @abstractmethod
-    def fetch_story(self, story_id) -> HackerNewsItem | None:
+    def fetch_hacker_news_item(self, hacker_news_item_id) -> HackerNewsItem | None:
         pass

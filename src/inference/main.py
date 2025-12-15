@@ -10,8 +10,8 @@ from db.models import Topic as TopicModel
 logger = logging.getLogger(__name__)
 
 
-def get_topic(model, story):
-    topic_ids, probabilities = model.transform(story.title)
+def get_topic(model, article):
+    topic_ids, probabilities = model.transform(article.title)
     topic = model.get_topic_info(topic_ids[0]).iloc[0]
     return Topic(
         id=topic.Topic,
@@ -50,13 +50,13 @@ def run_inference(
         model,
         session: Session,
 ):
-    db_stories = session.query(ArticleModel).all()
-    for story in db_stories:
-        topic_ = get_topic(model, story)
+    db_articles = session.query(ArticleModel).all()
+    for article in db_articles:
+        topic_ = get_topic(model, article)
         logger.info(f"found topic: {topic_}")
         topic = get_or_create_db_topic(session, topic_)
-        if topic not in story.topics:
-            story.topics.append(topic)
+        if topic not in article.topics:
+            article.topics.append(topic)
 
     session.commit()
 
@@ -66,7 +66,7 @@ def run_clustering(
         model
 ):
     """
-    trains a new version of the model on the entire ingested story titles and runs inference on each of them
+    trains a new version of the model on the entire ingested article titles and runs inference on each of them
     to cluster them into topics
     :return:
     """

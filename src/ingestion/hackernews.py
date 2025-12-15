@@ -14,14 +14,14 @@ logger = logging.getLogger(__name__)
 def fetch_articles(
         api_client: HackerNewsAPIInterface,
         session: Session,
-        story_ids: List[int] = None
+        hacker_news_item_ids: List[int] = None
 ):
-    if not story_ids:
-        story_ids = api_client.fetch_articles()
+    if not hacker_news_item_ids:
+        hacker_news_item_ids = api_client.fetch_hacker_news_items()
 
-    for i, hacker_news_story_id in enumerate(story_ids, start=1):
+    for i, hacker_news_story_id in enumerate(hacker_news_item_ids, start=1):
         logger.info(f"processing hacker news item: {hacker_news_story_id}")
-        hacker_news_story = api_client.fetch_story(hacker_news_story_id)
+        hacker_news_story = api_client.fetch_hacker_news_item(hacker_news_story_id)
 
         if hacker_news_story:
             data = {

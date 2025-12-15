@@ -93,7 +93,7 @@ def populated_db_session(
 
 
 @pytest.fixture
-def sample_articles():
+def sample_hacker_news_items():
     return [
         HackerNewsItem(
             id=1,
@@ -111,15 +111,15 @@ def sample_articles():
 
 
 @pytest.fixture
-def sample_stories_with_updates(sample_articles):
-    updated_stories = sample_articles.copy()
+def sample_hacker_news_items_with_updates(sample_hacker_news_items):
+    updated_stories = sample_hacker_news_items.copy()
     updated_stories[0].text += "updated title"
     return updated_stories
 
 
 @pytest.fixture
-def sample_stories_with_new_story(sample_articles):
-    updated_stories = sample_articles.copy()
+def sample_hacker_news_items_with_new_story(sample_hacker_news_items):
+    updated_stories = sample_hacker_news_items.copy()
     updated_stories.append(
         HackerNewsItem(
             id=3,
