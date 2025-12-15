@@ -1,6 +1,5 @@
 import logging
 
-from bertopic import BERTopic
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -38,7 +37,7 @@ def get_or_create_db_topic(
 
 def retrain(
         session: Session,
-        model: BERTopic,
+        model,
 ):
     titles = session.execute(
         select(ArticleModel.title)
@@ -48,7 +47,7 @@ def retrain(
 
 
 def run_inference(
-        model: BERTopic,
+        model,
         session: Session,
 ):
     db_stories = session.query(ArticleModel).all()
@@ -64,7 +63,7 @@ def run_inference(
 
 def run_clustering(
         session: Session,
-        model: BERTopic
+        model,
 ):
     """
     trains a new version of the model on the entire ingested story titles and runs inference on each of them
