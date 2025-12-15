@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class HackerNewsAPIClient(HackerNewsAPIInterface):
 
-    def fetch_stories(
+    def fetch_articles(
             self,
             endpoint="topstories"
     ) -> List[int]:

@@ -1,12 +1,11 @@
 import logging
-from typing import List
 
 from bertopic import BERTopic
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from common.topic import Topic
-from db.models import Story as StoryModel
+from db.models import Article as ArticleModel
 from db.models import Topic as TopicModel
 
 logger = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ def retrain(
         model: BERTopic,
 ):
     titles = session.execute(
-        select(StoryModel.title)
+        select(ArticleModel.title)
     ).scalars().all()
     model.fit(titles)
     return model
@@ -52,7 +51,7 @@ def run_inference(
         model: BERTopic,
         session: Session,
 ):
-    db_stories = session.query(StoryModel).all()
+    db_stories = session.query(ArticleModel).all()
     for story in db_stories:
         topic_ = get_topic(model, story)
         logger.info(f"found topic: {topic_}")
