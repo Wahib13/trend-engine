@@ -12,6 +12,7 @@ story_topic = Table(
     Column("topic_id", ForeignKey("topic.id"), primary_key=True),
 )
 
+
 class Topic(Base):
     __tablename__ = 'topic'
     id = Column(Integer, primary_key=True)
@@ -20,17 +21,17 @@ class Topic(Base):
     category = Column(String, nullable=True)
     created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    articles = relationship("Article", secondary=story_topic, back_populates="topics")
+    stories = relationship("Story", secondary=story_topic, back_populates="topics")
 
 
-class Article(Base):
+class Story(Base):
     __tablename__ = 'story'
 
     id = Column(Integer, primary_key=True)
     hacker_news_id = Column(Integer, nullable=False, index=True, unique=True)
 
     daily_trend_summary_id = Column(Integer, ForeignKey("daily_trend_summary.id"), nullable=True)
-    daily_trend_summary = relationship("DailyTrendSummary", back_populates="articles")
+    daily_trend_summary = relationship("DailyTrendSummary", back_populates="stories")
 
     comments = relationship("Comment", cascade="all, delete", order_by="Comment.id")
 
@@ -52,7 +53,7 @@ class Article(Base):
     kids = Column(JSON, nullable=True)  # List of child IDs
     parts = Column(JSON, nullable=True)  # List of poll option IDs
 
-    topics = relationship("Topic", secondary=story_topic, back_populates="articles")
+    topics = relationship("Topic", secondary=story_topic, back_populates="stories")
 
 
 class Comment(Base):
@@ -61,7 +62,7 @@ class Comment(Base):
     id = Column(Integer, primary_key=True)
 
     story_id = Column(Integer, ForeignKey("story.id"), nullable=False)
-    story = relationship("Article", back_populates="comments")
+    story = relationship("Story", back_populates="comments")
 
     author = Column(String, nullable=True)
     body = Column(Text, nullable=False)
@@ -81,5 +82,5 @@ class DailyTrendSummary(Base):
     dominant_topics = Column(JSON, nullable=True)
     predicted_trends = Column(JSON, nullable=True)
 
-    articles = relationship("Article", back_populates="daily_trend_summary")
+    stories = relationship("Story", back_populates="daily_trend_summary")
 

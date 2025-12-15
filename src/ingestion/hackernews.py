@@ -6,18 +6,19 @@ from sqlalchemy.dialects.sqlite import insert
 from sqlalchemy.orm import Session
 
 from adapters.interfaces import HackerNewsAPIInterface
-from db.models import Article
+from common.hackernews import Type
+from db.models import Story as StoryModel
 
 logger = logging.getLogger(__name__)
 
 
-def fetch_articles(
+def fetch_stories(
         api_client: HackerNewsAPIInterface,
         session: Session,
         story_ids: List[int] = None
 ):
     if not story_ids:
-        story_ids = api_client.fetch_articles()
+        story_ids = api_client.fetch_stories()
 
     for i, hacker_news_story_id in enumerate(story_ids, start=1):
         logger.info(f"processing hacker news item: {hacker_news_story_id}")
@@ -30,7 +31,7 @@ def fetch_articles(
                 "url": str(hacker_news_story.url),
                 "type": hacker_news_story.type.value,
             }
-            stmt = insert(Article).values(
+            stmt = insert(StoryModel).values(
                 **data
             ).on_conflict_do_update(
                 index_elements=["hacker_news_id"],
