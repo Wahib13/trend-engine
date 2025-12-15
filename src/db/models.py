@@ -5,10 +5,10 @@ from sqlalchemy.orm import relationship
 
 from db.connection import Base
 
-story_topic = Table(
-    "story_topic",
+article_topic = Table(
+    "article_topic",
     Base.metadata,
-    Column("story_id", ForeignKey("story.id"), primary_key=True),
+    Column("article_id", ForeignKey("article.id"), primary_key=True),
     Column("topic_id", ForeignKey("topic.id"), primary_key=True),
 )
 
@@ -20,11 +20,11 @@ class Topic(Base):
     category = Column(String, nullable=True)
     created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
-    articles = relationship("Article", secondary=story_topic, back_populates="topics")
+    articles = relationship("Article", secondary=article_topic, back_populates="topics")
 
 
 class Article(Base):
-    __tablename__ = 'story'
+    __tablename__ = 'article'
 
     id = Column(Integer, primary_key=True)
     hacker_news_id = Column(Integer, nullable=False, index=True, unique=True)
@@ -52,7 +52,7 @@ class Article(Base):
     kids = Column(JSON, nullable=True)  # List of child IDs
     parts = Column(JSON, nullable=True)  # List of poll option IDs
 
-    topics = relationship("Topic", secondary=story_topic, back_populates="articles")
+    topics = relationship("Topic", secondary=article_topic, back_populates="articles")
 
 
 class Comment(Base):
@@ -60,8 +60,8 @@ class Comment(Base):
 
     id = Column(Integer, primary_key=True)
 
-    story_id = Column(Integer, ForeignKey("story.id"), nullable=False)
-    story = relationship("Article", back_populates="comments")
+    article_id = Column(Integer, ForeignKey("article.id"), nullable=False)
+    article = relationship("Article", back_populates="comments")
 
     author = Column(String, nullable=True)
     body = Column(Text, nullable=False)
