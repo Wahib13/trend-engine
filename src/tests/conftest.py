@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from common.hackernews import HackerNewsItem, Type
 from common.topic import Topic
 from db.connection import Base
-from db.models import Story as StoryModel
+from db.models import Article as ArticleModel
 
 
 @pytest.fixture
@@ -67,14 +67,14 @@ class FakeTopicModel:
 
 
 @pytest.fixture
-def sample_db_stories():
+def sample_db_articles():
     return [
-        StoryModel(
+        ArticleModel(
             id=1,
             hacker_news_id=1,
             title="AI Lives Rent Free In My Head",
         ),
-        StoryModel(
+        ArticleModel(
             id=2,
             hacker_news_id=2,
             title="Python is cool, but my favorite language is Sarcasm",
@@ -85,15 +85,15 @@ def sample_db_stories():
 @pytest.fixture
 def populated_db_session(
         db_session,
-        sample_db_stories
+        sample_db_articles
 ):
-    db_session.add_all(sample_db_stories)
+    db_session.add_all(sample_db_articles)
     db_session.commit()
     return db_session
 
 
 @pytest.fixture
-def sample_stories():
+def sample_articles():
     return [
         HackerNewsItem(
             id=1,
@@ -111,15 +111,15 @@ def sample_stories():
 
 
 @pytest.fixture
-def sample_stories_with_updates(sample_stories):
-    updated_stories = sample_stories.copy()
+def sample_stories_with_updates(sample_articles):
+    updated_stories = sample_articles.copy()
     updated_stories[0].text += "updated title"
     return updated_stories
 
 
 @pytest.fixture
-def sample_stories_with_new_story(sample_stories):
-    updated_stories = sample_stories.copy()
+def sample_stories_with_new_story(sample_articles):
+    updated_stories = sample_articles.copy()
     updated_stories.append(
         HackerNewsItem(
             id=3,
