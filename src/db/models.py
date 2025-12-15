@@ -44,14 +44,6 @@ class Article(Base):
     sentiment = Column(JSON, nullable=True)
     summary = Column(Text, nullable=True)
 
-    type = Column(String, nullable=True)  # "story", "comment", "poll", etc.
-    deleted = Column(Integer, nullable=True)  # 0 or 1
-    dead = Column(Integer, nullable=True)  # 0 or 1
-    parent_id = Column(Integer, nullable=True)  # Parent comment or story
-    poll_id = Column(Integer, nullable=True)  # For pollopts
-    kids = Column(JSON, nullable=True)  # List of child IDs
-    parts = Column(JSON, nullable=True)  # List of poll option IDs
-
     topics = relationship("Topic", secondary=article_topic, back_populates="articles")
 
 

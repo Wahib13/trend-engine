@@ -28,7 +28,6 @@ def fetch_articles(
                 "hacker_news_id": hacker_news_story.id,
                 "title": hacker_news_story.title,
                 "url": str(hacker_news_story.url),
-                "type": hacker_news_story.type.value,
             }
             stmt = insert(Article).values(
                 **data

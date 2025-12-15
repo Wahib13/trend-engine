@@ -26,7 +26,6 @@ def test_new_articles(
         expected_article = next(filter(lambda article: article.id == db_article.hacker_news_id, sample_hacker_news_items))
         assert db_article.title == expected_article.title
         assert db_article.url == str(expected_article.url)
-        assert db_article.type == expected_article.type.value
 
 
 def test_update_stories(
@@ -77,7 +76,6 @@ def test_update_stories(
         expected_article = next(filter(lambda hacker_news_item: hacker_news_item.id == db_article.hacker_news_id, sample_hacker_news_items_with_updates))
         assert db_article.title == expected_article.title
         assert db_article.url == str(expected_article.url)
-        assert db_article.type == expected_article.type.value
 
 
 def test_new_article_added(
@@ -128,4 +126,3 @@ def test_new_article_added(
         expected_article = next(filter(lambda hacker_news_item: hacker_news_item.id == db_article.hacker_news_id, sample_hacker_news_items_with_new_story))
         assert db_article.title == expected_article.title
         assert db_article.url == str(expected_article.url)
-        assert db_article.type == expected_article.type.value
