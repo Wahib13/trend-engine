@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 import pytest
 from unittest.mock import Mock
@@ -8,13 +10,15 @@ from sqlalchemy.orm import sessionmaker, Session
 from common.hackernews import HackerNewsItem, Type
 from common.topic import Topic
 from db.connection import Base
-from db.models import Article as ArticleModel
+from db.initialise import initialise_database
+from db.models import Article as ArticleModel, User
 
 
 @pytest.fixture
 def engine():
     engine = create_engine("sqlite:///:memory:", echo=False)
     Base.metadata.create_all(engine)
+    initialise_database()
     return engine
 
 
@@ -81,12 +85,19 @@ def sample_db_articles():
         ),
     ]
 
+@pytest.fixture
+def test_user():
+    return User(
+        email=os.environ.get("DEFAULT_USER_EMAIL")
+    )
 
 @pytest.fixture
 def populated_db_session(
         db_session,
-        sample_db_articles
+        sample_db_articles,
+        test_user,
 ):
+    db_session.add(test_user)
     db_session.add_all(sample_db_articles)
     db_session.commit()
     return db_session

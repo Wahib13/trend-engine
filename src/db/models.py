@@ -5,12 +5,35 @@ from sqlalchemy.orm import relationship
 
 from db.connection import Base
 
-article_topic = Table(
-    "article_topic",
-    Base.metadata,
-    Column("article_id", ForeignKey("article.id"), primary_key=True),
-    Column("topic_id", ForeignKey("topic.id"), primary_key=True),
-)
+class User(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    email = Column(String, unique=True, nullable=False)
+
+    article_topics = relationship(
+        "UserArticleTopic",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+
+class UserArticleTopic(Base):
+    __tablename__ = "user_article_topic"
+
+    user_id = Column(ForeignKey("user.id"), primary_key=True)
+    article_id = Column(ForeignKey("article.id"), primary_key=True)
+    topic_id = Column(ForeignKey("topic.id"), primary_key=True)
+
+    created = Column(
+        DateTime,
+        nullable=False,
+        default=datetime.datetime.utcnow
+    )
+
+    user = relationship("User", back_populates="article_topics")
+    article = relationship("Article", back_populates="user_topics")
+    topic = relationship("Topic")
+
 
 class Topic(Base):
     __tablename__ = 'topic'
@@ -19,8 +42,6 @@ class Topic(Base):
     keywords = Column(JSON, nullable=True)
     category = Column(String, nullable=True)
     created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-
-    articles = relationship("Article", secondary=article_topic, back_populates="topics")
 
 
 class Article(Base):
@@ -44,7 +65,11 @@ class Article(Base):
     sentiment = Column(JSON, nullable=True)
     summary = Column(Text, nullable=True)
 
-    topics = relationship("Topic", secondary=article_topic, back_populates="articles")
+    user_topics = relationship(
+        "UserArticleTopic",
+        back_populates="article",
+        cascade="all, delete-orphan"
+    )
 
 
 class Comment(Base):
@@ -74,4 +99,3 @@ class DailyTrendSummary(Base):
     predicted_trends = Column(JSON, nullable=True)
 
     articles = relationship("Article", back_populates="daily_trend_summary")
-

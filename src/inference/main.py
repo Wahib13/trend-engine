@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from common.topic import Topic
-from db.models import Article as ArticleModel
+from db.models import Article as ArticleModel, User, UserArticleTopic
 from db.models import Topic as TopicModel
 
 logger = logging.getLogger(__name__)
@@ -49,29 +49,45 @@ def retrain(
 def run_inference(
         model,
         session: Session,
+        user: User
 ):
     db_articles = session.query(ArticleModel).all()
     for article in db_articles:
         topic_ = get_topic(model, article)
         logger.info(f"found topic: {topic_}")
         topic = get_or_create_db_topic(session, topic_)
-        if topic not in article.topics:
-            article.topics.append(topic)
+
+        user_topics_for_article = [
+            user_article.topic
+            for user_article in user.article_topics
+            if user_article.article_id == article.id
+        ]
+
+        if topic not in user_topics_for_article:
+            article_topic = UserArticleTopic(
+                user=user,
+                topic=topic,
+                article=article,
+            )
+            user.article_topics.append(article_topic)
 
     session.commit()
 
 
 def run_clustering(
         session: Session,
-        model
+        model,
+        user: User
 ):
     """
     trains a new version of the model on the entire ingested article titles and runs inference on each of them
     to cluster them into topics
     :return:
     """
+
     model = retrain(session, model)
     run_inference(
         model,
-        session
+        session,
+        user
     )
