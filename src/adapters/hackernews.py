@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class HackerNewsAPIClient(HackerNewsAPIInterface):
 
-    def fetch_stories(
+    def fetch_hacker_news_items(
             self,
             endpoint="topstories"
     ) -> List[int]:
@@ -25,9 +25,9 @@ class HackerNewsAPIClient(HackerNewsAPIInterface):
         ids = TypeAdapter(List[int]).validate_python(response.json())
         return ids
 
-    def fetch_story(self, story_id) -> HackerNewsItem | None:
+    def fetch_hacker_news_item(self, hacker_news_item_id) -> HackerNewsItem | None:
         response = requests.get(
-            f"{HACKER_NEWS_BASE_URL}/item/{story_id}.json"
+            f"{HACKER_NEWS_BASE_URL}/item/{hacker_news_item_id}.json"
         )
         logger.debug(response.json())
         hn_item = HackerNewsItem.from_json(response.json())

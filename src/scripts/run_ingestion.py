@@ -6,7 +6,7 @@ from ingestion import hackernews
 config.setup_logging()
 
 with get_session() as session:
-    hackernews.fetch_stories(
+    hackernews.fetch_articles(
         HackerNewsAPIClient(),
         session,
     )
