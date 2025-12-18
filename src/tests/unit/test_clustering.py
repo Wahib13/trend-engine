@@ -5,7 +5,6 @@ from tests.conftest import FakeTopicModel
 def test_basic_clustering(
         populated_db_session,
         db_session,
-        test_user,
 ):
     model = FakeTopicModel()
-    run_clustering(db_session, model, test_user)
+    run_clustering(db_session, model)
