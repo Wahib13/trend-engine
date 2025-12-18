@@ -1,34 +1,26 @@
-import os
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
-from unittest.mock import Mock
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 from common.hackernews import HackerNewsItem, Type
 from common.topic import Topic
-from db.connection import Base
 from db.initialise import initialise_database
-from db.models import Article as ArticleModel, User
+from db.models import Article as ArticleModel
 
 
 @pytest.fixture
-def engine():
+def db_session():
     engine = create_engine("sqlite:///:memory:", echo=False)
-    Base.metadata.create_all(engine)
-    initialise_database()
-    return engine
-
-
-@pytest.fixture
-def db_session(engine):
     connection = engine.connect()
     transaction = connection.begin()
 
     session_maker_instance = sessionmaker(bind=connection)
     session: Session = session_maker_instance()
+
+    initialise_database(engine, session)
 
     yield session
 
@@ -86,18 +78,10 @@ def sample_db_articles():
     ]
 
 @pytest.fixture
-def test_user():
-    return User(
-        email=os.environ.get("DEFAULT_USER_EMAIL")
-    )
-
-@pytest.fixture
 def populated_db_session(
         db_session,
         sample_db_articles,
-        test_user,
 ):
-    db_session.add(test_user)
     db_session.add_all(sample_db_articles)
     db_session.commit()
     return db_session
