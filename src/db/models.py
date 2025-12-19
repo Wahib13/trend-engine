@@ -2,8 +2,44 @@ import datetime
 
 from sqlalchemy import Column, Integer, DateTime, String, Text, JSON, ForeignKey, Date, Table
 from sqlalchemy.orm import relationship
+from sqlalchemy import Enum as SAEnum
+from enum import Enum
 
 from db.connection import Base
+
+
+class FeedType(Enum):
+    POLITICS = "politics"
+    TECHNOLOGY = "technology"
+    BUSINESS = "business"
+    HEALTH = "health"
+
+
+class Feed(Base):
+    __tablename__ = 'feed'
+    url = Column(String, primary_key=True)
+    feed_type = Column(
+        SAEnum(FeedType, native_enum=False),
+        nullable=False,
+    )
+    source_id = Column(Integer, ForeignKey("source.id"), nullable=False)
+    source = relationship("Source")
+
+
+class SourceName(Enum):
+    BBC = "BBC"
+    THE_GUARDIAN = "TheGuardian"
+
+
+class Source(Base):
+    __tablename__ = 'source'
+    id = Column(Integer, primary_key=True)
+    name = Column(SAEnum(SourceName))
+
+    feeds = relationship("Feed", back_populates="source")
+
+    articles = relationship("Article", back_populates="source")
+
 
 article_topic = Table(
     "article_topic",
@@ -22,10 +58,7 @@ class User(Base):
 class Topic(Base):
     __tablename__ = 'topic'
     id = Column(Integer, primary_key=True)
-    description = Column(Text, nullable=True)
-    keywords = Column(JSON, nullable=True)
-    category = Column(String, nullable=True)
-    created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+    name = Column(Text, nullable=True)
 
     articles = relationship("Article", secondary=article_topic, back_populates="topics")
 
@@ -34,22 +67,23 @@ class Article(Base):
     __tablename__ = 'article'
 
     id = Column(Integer, primary_key=True)
-    hacker_news_id = Column(Integer, nullable=False, index=True, unique=True)
 
     daily_trend_summary_id = Column(Integer, ForeignKey("daily_trend_summary.id"), nullable=True)
     daily_trend_summary = relationship("DailyTrendSummary", back_populates="articles")
 
     comments = relationship("Comment", cascade="all, delete", order_by="Comment.id")
 
-    title = Column(String, nullable=True)  # Optional for comments/pollopts
-    url = Column(String, nullable=True)  # Optional, e.g., HackerNews story/job URL
+    title = Column(String, nullable=True)
+    url = Column(String, nullable=True)
+
+    source_id = Column(Integer, ForeignKey("source.id"), nullable=False)
+    source = relationship("Source")
+
+    source_topic = Column(String, nullable=True)  # the topic that the source website gave this article. nullable because some sources may not have it.
     author = Column(String, nullable=True)
-    score = Column(Integer, nullable=True)  # Optional, e.g., comments may not have score
     text = Column(Text, nullable=True)
-    num_comments = Column(Integer, nullable=True)  # HackerNews: descendants
-    created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
-    sentiment = Column(JSON, nullable=True)
     summary = Column(Text, nullable=True)
+    created = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
 
     topics = relationship("Topic", secondary=article_topic, back_populates="articles")
 
@@ -78,6 +112,5 @@ class DailyTrendSummary(Base):
     date = Column(Date, nullable=False)
     summary = Column(Text, nullable=True)
     dominant_topics = Column(JSON, nullable=True)
-    predicted_trends = Column(JSON, nullable=True)
 
     articles = relationship("Article", back_populates="daily_trend_summary")

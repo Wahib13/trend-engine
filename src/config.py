@@ -2,7 +2,6 @@ import logging
 
 import os
 
-HACKER_NEWS_BASE_URL = os.environ.get("HACKER_NEWS_BASE_URL")
 DATABASE_CONNECTION_STRING = os.environ.get("DATABASE_CONNECTION_STRING")
 
 
