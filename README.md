@@ -2,11 +2,20 @@
 
 ## Summary
 
-A personal data-driven project that collects and analyzes activity across online content feeds to understand and summarize emerging trends. The tool aggregates posts, discussions, and articles from
-multiple sources to highlight what’s most relevant and interesting.
-Main goal: reduce doom-scrolling and explore how trending topics evolve over time.
+Trend Engine is a personal data-driven project focused on **collecting and organizing articles from online content feeds** in order to better understand what topics are being discussed across sources.
 
-I built this tool to reduce doom-scrolling and help myself stay informed efficiently. I get a daily digest of what’s trending and what I actually care about.
+At its current stage, the project focuses on:
+
+- Ingesting articles from predefined sources(RSS feeds)
+- Storing and deduplicating articles in a structured database
+- Assigning simple, source-derived topics to articles. Deeper analysis is planned for future iterations.
+
+The broader goal is to **reduce doom-scrolling** by creating a clean, structured view of incoming content, while laying the groundwork for future trend detection, topic modeling, and summarization.
+
+## Motivation
+
+I built this tool to help myself stay informed without constantly scrolling through feeds. Instead of consuming everything in real time, the idea is to collect content in the background and surface
+what’s relevant in a more deliberate, digestible way.
 
 ## Data Model
 
@@ -22,28 +31,40 @@ cd trend-engine
 ```
 
 2. Install dependencies
+
 ```commandline
 pip install -r requirements.txt
 ```
 
 3. Environment setup:
-Make a copy of the example environment file:
+   Make a copy of the example environment file:
+
 ```commandline
 cp .env.example .env
 ```
 
 4. Export environment variables
+
 ```commandline
 export $(grep -v '^#' .env | xargs)
 ```
 
+5. Initialize the database:
+
+```commandline
+cd src/
+python -m scripts.init_db
+```
+
 # Running Tests
+
 ```commandline
 cd src/
 python -m pytest
 ```
 
 # Running Ingestion
+
 ```commandline
 cd src/
 python -m scripts.run_ingestion
