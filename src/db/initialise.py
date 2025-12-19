@@ -1,18 +1,9 @@
-import os
-
 from db.connection import Base
-from db.models import Topic, User
+from db.models import Source, SourceName, Feed, FeedType
 
 
-def initialise_database(engine, session):
+def initialise_database(engine, session, default_sources: list[Source]):
     Base.metadata.create_all(engine)
 
-    default_topic: Topic = Topic(
-        description="default topic"
-    )
-    session.add(default_topic)
-    default_user: User = User(
-        email=os.environ["DEFAULT_USER_EMAIL"]
-    )
-    session.add(default_user)
+    session.add_all(default_sources)
     session.commit()
