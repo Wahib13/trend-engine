@@ -1,6 +1,6 @@
 from db.connection import engine, get_session
 from db.initialise import initialise_database
-from db.models import Source, SourceName, FeedType, Feed
+from db.models import Source, SourceName, FeedType, Feed, Topic
 
 if __name__ == "__main__":
     with get_session() as session:
@@ -18,4 +18,10 @@ if __name__ == "__main__":
             Feed(url="https://www.theguardian.com/business/rss", feed_type=FeedType.BUSINESS),
             Feed(url="https://www.theguardian.com/society/health/rss", feed_type=FeedType.HEALTH)
         ]
-        initialise_database(engine, session, [source_bbc, source_the_guardian])
+        default_topics = [
+            Topic(name=FeedType.POLITICS.value),
+            Topic(name=FeedType.TECHNOLOGY.value),
+            Topic(name=FeedType.BUSINESS.value),
+            Topic(name=FeedType.HEALTH.value),
+        ]
+        initialise_database(engine, session, [source_bbc, source_the_guardian, *default_topics])

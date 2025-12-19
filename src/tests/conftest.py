@@ -5,18 +5,25 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 from db.initialise import initialise_database
-from db.models import Article as ArticleModel, Feed, FeedType, SourceName, Source
+from db.models import Article as ArticleModel, Feed, FeedType, SourceName, Source, Topic
+
 
 @pytest.fixture
-def default_sources():
+def default_data():
     source_bbc = Source(name=SourceName.BBC)
     source_bbc.feeds = [
         Feed(url="https://feed.test", feed_type=FeedType.POLITICS),
     ]
-    return [source_bbc]
+    default_topics = [
+        Topic(name=FeedType.POLITICS.value),
+        Topic(name=FeedType.TECHNOLOGY.value),
+        Topic(name=FeedType.BUSINESS.value),
+        Topic(name=FeedType.HEALTH.value),
+    ]
+    return [source_bbc, *default_topics]
 
 @pytest.fixture
-def db_session(default_sources):
+def db_session(default_data):
     engine = create_engine("sqlite:///:memory:", echo=False)
     connection = engine.connect()
     transaction = connection.begin()
@@ -24,7 +31,7 @@ def db_session(default_sources):
     session_maker_instance = sessionmaker(bind=connection)
     session: Session = session_maker_instance()
 
-    initialise_database(engine, session, default_sources)
+    initialise_database(engine, session, default_data)
 
     yield session
 
