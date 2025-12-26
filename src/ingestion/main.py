@@ -1,6 +1,6 @@
 import feedparser
 
-from db.models import Article as ArticleModel, Source
+from db.models import Article as ArticleDB, Source
 
 
 def fetch_rss_entries(session):
@@ -15,11 +15,11 @@ def fetch_rss_entries(session):
                 title = entry.get("title")
 
                 # Simple deduplication: skip if URL already in DB
-                exists = session.query(ArticleModel).filter_by(url=url).first()
+                exists = session.query(ArticleDB).filter_by(url=url).first()
                 if exists:
                     continue
 
-                article = ArticleModel(
+                article = ArticleDB(
                     url=url,
                     title=title,
                     source_topic=feed.feed_type.value,

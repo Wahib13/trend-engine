@@ -3,7 +3,7 @@ import logging
 from newspaper import Article
 
 import config
-from db.models import Article as ArticleModel
+from db.models import Article as ArticleDB
 
 from db.connection import get_session
 
@@ -12,7 +12,7 @@ config.setup_logging()
 logger = logging.getLogger(__name__)
 
 with get_session() as session:
-    articles = session.query(ArticleModel)
+    articles = session.query(ArticleDB)
     for article in articles:
         try:
             url = article.url

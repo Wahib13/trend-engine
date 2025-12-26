@@ -6,7 +6,7 @@ from starlette.testclient import TestClient
 from api.main import app
 from db.connection import get_session_dependency
 from db.initialise import initialise_database
-from db.models import Article as ArticleModel, Feed, FeedType, SourceName, Source, Topic
+from db.models import Article as ArticleDB, Feed, FeedType, SourceName, Source, Topic
 
 
 @pytest.fixture
@@ -31,13 +31,13 @@ def fake_topics():
 @pytest.fixture
 def fake_articles(fake_topics, fake_source):
     return [
-        ArticleModel(
+        ArticleDB(
             title="AI Lives Rent Free In My Head",
             url="https://example.com/article1",
             topics=[fake_topics[0]],
             source=fake_source
         ),
-        ArticleModel(
+        ArticleDB(
             title="Python is cool, but my favorite language is Sarcasm",
             url="https://example.com/article2",
             topics=[fake_topics[1]],
