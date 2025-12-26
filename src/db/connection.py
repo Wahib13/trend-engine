@@ -18,3 +18,8 @@ def get_session() -> Session:
         yield db
     finally:
         db.close()
+
+
+def get_session_dependency():
+    with get_session() as db:
+        yield db

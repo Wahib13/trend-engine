@@ -1,7 +1,10 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from starlette.testclient import TestClient
 
+from api.main import app
+from db.connection import get_session_dependency
 from db.initialise import initialise_database
 from db.models import Article as ArticleModel, Feed, FeedType, SourceName, Source, Topic
 
@@ -86,3 +89,9 @@ def override_get_session(
 class FakeFeedData:
     def __init__(self, entries):
         self.entries = entries
+
+
+@pytest.fixture
+def test_client(override_get_session):
+    app.dependency_overrides[get_session_dependency] = override_get_session
+    return TestClient(app)
