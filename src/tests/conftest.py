@@ -1,5 +1,3 @@
-from unittest.mock import Mock
-
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -9,21 +7,43 @@ from db.models import Article as ArticleModel, Feed, FeedType, SourceName, Sourc
 
 
 @pytest.fixture
-def default_data():
+def fake_source():
     source_bbc = Source(name=SourceName.BBC)
     source_bbc.feeds = [
         Feed(url="https://feed.test", feed_type=FeedType.POLITICS),
     ]
-    default_topics = [
-        Topic(name=FeedType.POLITICS.value),
+    return source_bbc
+
+
+@pytest.fixture
+def fake_topics():
+    return [
         Topic(name=FeedType.TECHNOLOGY.value),
+        Topic(name=FeedType.POLITICS.value),
         Topic(name=FeedType.BUSINESS.value),
         Topic(name=FeedType.HEALTH.value),
     ]
-    return [source_bbc, *default_topics]
+
 
 @pytest.fixture
-def db_session(default_data):
+def fake_articles(fake_topics, fake_source):
+    return [
+        ArticleModel(
+            title="AI Lives Rent Free In My Head",
+            url="https://example.com/article1",
+            topics=[fake_topics[0]],
+            source=fake_source
+        ),
+        ArticleModel(
+            title="Python is cool, but my favorite language is Sarcasm",
+            url="https://example.com/article2",
+            topics=[fake_topics[1]],
+            source=fake_source
+        ),
+    ]
+
+
+def make_test_db_session(fake_source, fake_topics, fake_articles):
     engine = create_engine("sqlite:///:memory:", echo=False)
     connection = engine.connect()
     transaction = connection.begin()
@@ -31,41 +51,38 @@ def db_session(default_data):
     session_maker_instance = sessionmaker(bind=connection)
     session: Session = session_maker_instance()
 
-    initialise_database(engine, session, default_data)
+    initialise_database(engine, session, [*fake_topics, fake_source, *fake_articles])
 
-    yield session
+    try:
+        yield session
+    finally:
+        session.close()
+        transaction.rollback()
+        connection.close()
 
-    session.close()
-    transaction.rollback()
-    connection.close()
+
+@pytest.fixture
+def db_session(
+        fake_source,
+        fake_topics,
+        fake_articles,
+):
+    for session in make_test_db_session(fake_source, fake_topics, fake_articles):
+        yield session
+
+
+@pytest.fixture
+def override_get_session(
+        fake_source,
+        fake_topics,
+        fake_articles
+):
+    def _override():
+        yield from make_test_db_session(fake_source, fake_topics, fake_articles)
+
+    return _override
 
 
 class FakeFeedData:
     def __init__(self, entries):
         self.entries = entries
-
-
-@pytest.fixture
-def sample_db_articles():
-    return [
-        ArticleModel(
-            id=1,
-            hacker_news_id=1,
-            title="AI Lives Rent Free In My Head",
-        ),
-        ArticleModel(
-            id=2,
-            hacker_news_id=2,
-            title="Python is cool, but my favorite language is Sarcasm",
-        ),
-    ]
-
-
-@pytest.fixture
-def populated_db_session(
-        db_session,
-        sample_db_articles,
-):
-    db_session.add_all(sample_db_articles)
-    db_session.commit()
-    return db_session

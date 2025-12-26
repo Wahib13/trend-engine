@@ -5,7 +5,7 @@ from ingestion.main import fetch_rss_entries
 from tests.conftest import FakeFeedData
 
 
-def test_new_articles(db_session, default_data, monkeypatch):
+def test_new_articles(db_session, fake_source, monkeypatch):
     fake_entries = [
         {"link": "https://example.com/a1", "title": "Article 1"},
         {"link": "https://example.com/a2", "title": "Article 2"},
@@ -29,16 +29,16 @@ def test_new_articles(db_session, default_data, monkeypatch):
     }
 
     for article in articles:
-        assert article.source == default_data[0]
+        assert article.source == fake_source
         assert article.source_topic == FeedType.POLITICS.value
 
 
-def test_new_articles_skips_duplicates(db_session, default_data, monkeypatch):
+def test_new_articles_skips_duplicates(db_session, fake_source, monkeypatch):
     existing = Article(
         url="https://example.com/a1",
         title="Existing",
         source_topic=FeedType.TECHNOLOGY.value,
-        source=default_data[0],
+        source=fake_source,
     )
 
     db_session.add(existing)
