@@ -44,13 +44,7 @@ cp .env.example .env
 cp ui/.env.example ui/.env
 ```
 
-4. Export environment variables
-
-```commandline
-export $(grep -v '^#' .env | xargs)
-```
-
-5. Initialize the database:
+4. Initialize the database:
 
 ```commandline
 cd src/
