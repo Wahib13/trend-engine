@@ -37,10 +37,11 @@ pip install -r requirements.txt
 ```
 
 3. Environment setup:
-   Make a copy of the example environment file:
+   Make a copy of the example environment files:
 
 ```commandline
 cp .env.example .env
+cp ui/.env.example ui/.env
 ```
 
 4. Export environment variables
@@ -68,4 +69,11 @@ python -m pytest
 ```commandline
 cd src/
 python -m scripts.run_ingestion
+```
+
+# Running the Frontend
+```commandline
+cd ui/
+npm install
+npm run dev
 ```
