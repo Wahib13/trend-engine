@@ -1,6 +1,4 @@
-import os
-
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Query
 from starlette.middleware.cors import CORSMiddleware
 
 import config
@@ -22,10 +20,19 @@ app.add_middleware(
 
 @app.get("/articles/")
 def get_articles(
+        topic_id: int | None = Query(default=None),
         session=Depends(get_session_dependency)
 ) -> list[ArticleList]:
-    articles = session.query(ArticleDB).all()
-    return articles
+    query = session.query(ArticleDB)
+
+    if topic_id is not None:
+        query = (
+            query
+            .join(ArticleDB.topics)
+            .filter(TopicDB.id == topic_id)
+        )
+
+    return query.all()
 
 
 @app.get("/topics/")

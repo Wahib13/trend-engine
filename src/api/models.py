@@ -14,7 +14,8 @@ class ArticleList(BaseModel):
     id: int
     title: str
     url: str
+    topics: list[TopicList]
 
 
 class Article(ArticleList):
-    topics: list[TopicList]
+    ...
