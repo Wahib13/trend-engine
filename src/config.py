@@ -1,15 +1,15 @@
 import logging
 from typing import List
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(extra='ignore')
+    env_file: str = ".env"
+
     CORS_ALLOWED_ORIGINS: List[str] = []
     DATABASE_CONNECTION_STRING: str = ""
-
-    class Config:
-        env_file = "../.env"
 
 
 settings = Settings()

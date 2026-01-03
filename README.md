@@ -71,3 +71,8 @@ cd ui/
 npm install
 npm run dev
 ```
+
+# Running both UI and API with docker-compose 
+```commandline
+docker compose up
+```
