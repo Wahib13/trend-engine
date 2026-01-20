@@ -60,9 +60,24 @@ python -m pytest
 
 # Running Ingestion
 
+## Pull article titles from RSS feeds
 ```commandline
 cd src/
 python -m scripts.run_ingestion
+```
+
+## Pull article content
+
+```commandline
+cd src/
+python -m ingestion.content
+```
+
+# Running Topic Inference
+
+```commandline
+cd src/
+python -m scripts.run_inference
 ```
 
 # Running the Frontend
