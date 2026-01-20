@@ -1,3 +1,4 @@
+from datetime import date
 from pydantic import BaseModel
 
 
@@ -19,3 +20,11 @@ class ArticleList(BaseModel):
 
 class Article(ArticleList):
     ...
+
+
+class DailyTrendSummaryList(BaseModel):
+    id: int
+    date: date
+    summary: str | None
+    topic: TopicList
+    articles: list[ArticleList]
