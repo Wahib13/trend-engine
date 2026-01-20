@@ -1,4 +1,4 @@
-import { Topic } from './topic';
+import type { Topic } from "./topic";
 
 export interface Article {
   id: number;
