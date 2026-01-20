@@ -1,8 +1,12 @@
+from typing import List, Dict
+import datetime
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from starlette.testclient import TestClient
 
+from adapters.interfaces import LLMClient
 from api.main import app
 from db.connection import get_session_dependency
 from db.initialise import initialise_database
@@ -30,18 +34,78 @@ def fake_topics():
 
 @pytest.fixture
 def fake_articles(fake_topics, fake_source):
+    """Articles with default timestamps (now)"""
     return [
         ArticleDB(
             title="AI Lives Rent Free In My Head",
             url="https://example.com/article1",
             topics=[fake_topics[0]],
-            source=fake_source
+            source=fake_source,
+            source_topic=FeedType.TECHNOLOGY.value
         ),
         ArticleDB(
             title="Python is cool, but my favorite language is Sarcasm",
             url="https://example.com/article2",
             topics=[fake_topics[1]],
-            source=fake_source
+            source=fake_source,
+            source_topic=FeedType.POLITICS.value
+        ),
+    ]
+
+
+@pytest.fixture
+def fake_articles_with_dates(fake_topics, fake_source):
+    """Articles with specific creation dates for testing date filtering"""
+    now = datetime.datetime.now()
+    today = now.date()
+    yesterday = today - datetime.timedelta(days=1)
+    two_days_ago = today - datetime.timedelta(days=2)
+    week_ago = today - datetime.timedelta(days=7)
+
+    return [
+        # Articles from today (within past 24 hours) - use explicit times on today's date
+        ArticleDB(
+            title="Breaking News Today Morning",
+            url="https://example.com/today1",
+            topics=[fake_topics[0]],
+            source=fake_source,
+            source_topic=FeedType.TECHNOLOGY.value,
+            created=datetime.datetime.combine(today, datetime.time(10, 0, 0))
+        ),
+        ArticleDB(
+            title="Latest Tech Update",
+            url="https://example.com/today2",
+            topics=[fake_topics[0]],
+            source=fake_source,
+            source_topic=FeedType.TECHNOLOGY.value,
+            created=datetime.datetime.combine(today, datetime.time(18, 30, 0))
+        ),
+        # Article from yesterday
+        ArticleDB(
+            title="Yesterday's Big Story",
+            url="https://example.com/yesterday",
+            topics=[fake_topics[1]],
+            source=fake_source,
+            source_topic=FeedType.POLITICS.value,
+            created=datetime.datetime.combine(yesterday, datetime.time(10, 0, 0))
+        ),
+        # Article from 2 days ago
+        ArticleDB(
+            title="Old News from Two Days Ago",
+            url="https://example.com/twodays",
+            topics=[fake_topics[2]],
+            source=fake_source,
+            source_topic=FeedType.BUSINESS.value,
+            created=datetime.datetime.combine(two_days_ago, datetime.time(15, 30, 0))
+        ),
+        # Article from a week ago
+        ArticleDB(
+            title="Ancient Article from Last Week",
+            url="https://example.com/week",
+            topics=[fake_topics[3]],
+            source=fake_source,
+            source_topic=FeedType.HEALTH.value,
+            created=datetime.datetime.combine(week_ago, datetime.time(9, 0, 0))
         ),
     ]
 
@@ -75,6 +139,17 @@ def db_session(
 
 
 @pytest.fixture
+def db_session_with_dated_articles(
+        fake_source,
+        fake_topics,
+        fake_articles_with_dates,
+):
+    """Database session with articles that have specific creation dates"""
+    for session in make_test_db_session(fake_source, fake_topics, fake_articles_with_dates):
+        yield session
+
+
+@pytest.fixture
 def override_get_session(
         fake_source,
         fake_topics,
@@ -89,6 +164,14 @@ def override_get_session(
 class FakeFeedData:
     def __init__(self, entries):
         self.entries = entries
+
+
+class FakeLLM(LLMClient):
+    def __init__(self, model: str):
+        ...
+
+    def chat(self, messages: List[Dict[str, str]], stream=False, **kwargs) -> str:
+        return "Fake response"
 
 
 @pytest.fixture
