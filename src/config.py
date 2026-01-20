@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     CORS_ALLOWED_ORIGINS: List[str] = []
     DATABASE_CONNECTION_STRING: str = ""
+    OLLAMA_MODEL: str = "llama3.1:8b"
 
 
 settings = Settings()
