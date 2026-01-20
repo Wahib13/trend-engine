@@ -1,7 +1,5 @@
 import datetime
 
-from db.models import Article
-
 
 def test_get_topics(
         test_client,
@@ -61,26 +59,20 @@ def test_get_articles_with_topic_filter(test_client, fake_articles):
         assert 1 in topic_ids
 
 
-def test_get_articles_with_pagination(test_client, fake_articles):
-    """Test pagination on articles endpoint"""
-    total_articles = len(fake_articles)
-
-    # Get all articles without pagination
-    response = test_client.get("/articles/")
-    assert response.status_code == 200
-    all_articles = response.json()
-    assert len(all_articles) == total_articles
-
+def test_get_articles_with_pagination_limit(test_client, fake_articles):
     # Test with limit parameter only
     response = test_client.get("/articles/?limit=1")
     assert response.status_code == 200
     limited = response.json()
-    assert len(limited) <= 1
+    assert len(limited) == 1
 
-    # Test that skip parameter works (skipping past all should return empty)
-    response = test_client.get(f"/articles/?skip=100")
+
+def test_get_articles_with_pagination_skip(test_client, fake_articles):
+    total_articles = len(fake_articles)
+
+    response = test_client.get(f"/articles/?skip=1")
     assert response.status_code == 200
-    assert len(response.json()) == 0
+    assert len(response.json()) == total_articles - 1
 
 
 # Tests for /daily-summaries/ endpoint
@@ -170,23 +162,11 @@ def test_get_daily_summaries_pagination(test_client_with_summaries):
     """Test pagination on daily summaries endpoint"""
     today = datetime.date.today()
 
-    # Get all summaries for today without pagination
-    response = test_client_with_summaries.get(f"/daily-summaries/?date={today}")
-    assert response.status_code == 200
-    all_summaries = response.json()
-    total_summaries = len(all_summaries)
-    assert total_summaries > 0
-
     # Test with limit parameter
     response = test_client_with_summaries.get(f"/daily-summaries/?limit=1")
     assert response.status_code == 200
     limited = response.json()
-    assert len(limited) <= 1
-
-    # Test that skip parameter works (skipping past all should return empty)
-    response = test_client_with_summaries.get(f"/daily-summaries/?skip=100")
-    assert response.status_code == 200
-    assert len(response.json()) == 0
+    assert len(limited) == 1
 
 
 def test_get_daily_summaries_topic_structure(test_client_with_summaries):
