@@ -111,6 +111,7 @@ class DailyTrendSummary(Base):
 
     date = Column(Date, nullable=False)
     summary = Column(Text, nullable=True)
-    dominant_topics = Column(JSON, nullable=True)
+    topic_id = Column(Integer, ForeignKey("topic.id"), nullable=False)
+    topic = relationship("Topic")
 
     articles = relationship("Article", back_populates="daily_trend_summary")

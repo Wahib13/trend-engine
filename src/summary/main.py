@@ -147,7 +147,7 @@ def generate_daily_summary(
             create_system_prompt_for_topic_summary(topic.name)
         )
         daily_summary = DailyTrendSummary(
-            dominant_topics=topic.name,
+            topic=topic,
             summary=daily_topic_summary,
             date=summary_date,
         )

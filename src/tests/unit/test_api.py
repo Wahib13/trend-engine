@@ -1,3 +1,5 @@
+import datetime
+
 from db.models import Article
 
 
@@ -43,3 +45,160 @@ def test_get_article(
     response = test_client.get(f"/article/{test_id}/")
     assert response.status_code == 200
     assert response.json()["id"] == test_id
+
+
+def test_get_articles_with_topic_filter(test_client, fake_articles):
+    """Test filtering articles by topic_id"""
+    # Get articles for topic_id=1 (Technology)
+    response = test_client.get("/articles/?topic_id=1")
+    assert response.status_code == 200
+    articles = response.json()
+
+    # Should only return articles with technology topic
+    assert len(articles) > 0
+    for article in articles:
+        topic_ids = [t["id"] for t in article["topics"]]
+        assert 1 in topic_ids
+
+
+def test_get_articles_with_pagination(test_client, fake_articles):
+    """Test pagination on articles endpoint"""
+    total_articles = len(fake_articles)
+
+    # Get all articles without pagination
+    response = test_client.get("/articles/")
+    assert response.status_code == 200
+    all_articles = response.json()
+    assert len(all_articles) == total_articles
+
+    # Test with limit parameter only
+    response = test_client.get("/articles/?limit=1")
+    assert response.status_code == 200
+    limited = response.json()
+    assert len(limited) <= 1
+
+    # Test that skip parameter works (skipping past all should return empty)
+    response = test_client.get(f"/articles/?skip=100")
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+
+# Tests for /daily-summaries/ endpoint
+
+
+def test_get_daily_summaries_default_today(test_client_with_summaries):
+    """Test getting daily summaries defaults to today's date"""
+    response = test_client_with_summaries.get("/daily-summaries/")
+    assert response.status_code == 200
+    summaries = response.json()
+
+    # Should return today's summaries (2 summaries: tech and politics)
+    assert len(summaries) == 2
+
+    today = datetime.date.today()
+    for summary in summaries:
+        assert summary["date"] == str(today)
+        assert summary["summary"] is not None
+        assert "topic" in summary
+        assert "articles" in summary
+        assert len(summary["articles"]) > 0
+
+
+def test_get_daily_summaries_specific_date(test_client_with_summaries):
+    """Test filtering daily summaries by specific date"""
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+
+    response = test_client_with_summaries.get(f"/daily-summaries/?date={yesterday}")
+    assert response.status_code == 200
+    summaries = response.json()
+
+    # Should return yesterday's summaries (2 summaries: tech and business)
+    assert len(summaries) == 2
+
+    for summary in summaries:
+        assert summary["date"] == str(yesterday)
+        assert summary["summary"] is not None
+
+
+def test_get_daily_summaries_filter_by_topic(test_client_with_summaries):
+    """Test filtering daily summaries by topic_id"""
+    today = datetime.date.today()
+
+    # Filter for technology topic (topic_id=1)
+    response = test_client_with_summaries.get(f"/daily-summaries/?date={today}&topic_id=1")
+    assert response.status_code == 200
+    summaries = response.json()
+
+    # Should return only technology summary for today
+    assert len(summaries) == 1
+    assert summaries[0]["topic"]["id"] == 1
+    assert summaries[0]["topic"]["name"] == "technology"
+
+
+def test_get_daily_summaries_no_results(test_client_with_summaries):
+    """Test daily summaries returns empty list when no data for date"""
+    future_date = datetime.date.today() + datetime.timedelta(days=30)
+
+    response = test_client_with_summaries.get(f"/daily-summaries/?date={future_date}")
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+
+def test_get_daily_summaries_includes_articles(test_client_with_summaries):
+    """Test that daily summaries include their linked articles"""
+    today = datetime.date.today()
+
+    response = test_client_with_summaries.get(f"/daily-summaries/?date={today}")
+    assert response.status_code == 200
+    summaries = response.json()
+
+    # Find the technology summary
+    tech_summary = next(s for s in summaries if s["topic"]["name"] == "technology")
+
+    # Should have articles linked
+    assert len(tech_summary["articles"]) == 2
+
+    # Verify article structure
+    for article in tech_summary["articles"]:
+        assert "id" in article
+        assert "title" in article
+        assert "url" in article
+        assert "topics" in article
+
+
+def test_get_daily_summaries_pagination(test_client_with_summaries):
+    """Test pagination on daily summaries endpoint"""
+    today = datetime.date.today()
+
+    # Get all summaries for today without pagination
+    response = test_client_with_summaries.get(f"/daily-summaries/?date={today}")
+    assert response.status_code == 200
+    all_summaries = response.json()
+    total_summaries = len(all_summaries)
+    assert total_summaries > 0
+
+    # Test with limit parameter
+    response = test_client_with_summaries.get(f"/daily-summaries/?limit=1")
+    assert response.status_code == 200
+    limited = response.json()
+    assert len(limited) <= 1
+
+    # Test that skip parameter works (skipping past all should return empty)
+    response = test_client_with_summaries.get(f"/daily-summaries/?skip=100")
+    assert response.status_code == 200
+    assert len(response.json()) == 0
+
+
+def test_get_daily_summaries_topic_structure(test_client_with_summaries):
+    """Test that topic information is properly included"""
+    response = test_client_with_summaries.get("/daily-summaries/")
+    assert response.status_code == 200
+    summaries = response.json()
+
+    assert len(summaries) > 0
+    for summary in summaries:
+        topic = summary["topic"]
+        assert "id" in topic
+        assert "name" in topic
+        assert isinstance(topic["id"], int)
+        assert isinstance(topic["name"], str)
