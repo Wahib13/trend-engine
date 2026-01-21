@@ -32,6 +32,27 @@
   margin-top: 32px;
 }
 
+.date-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.date-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.date-header {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
 .summaries-grid {
   display: flex;
   flex-direction: column;
@@ -117,6 +138,14 @@
   .app-subtitle {
     font-size: 16px;
   }
+
+  .date-header {
+    font-size: 20px;
+  }
+
+  .date-sections {
+    gap: 32px;
+  }
 }
 
 /* Dark Mode */
@@ -127,6 +156,11 @@
 
   .app-subtitle {
     color: #9ca3af;
+  }
+
+  .date-header {
+    color: #1e1e1e;
+    border-bottom-color: #3a3a3a;
   }
 
   .loading-spinner {

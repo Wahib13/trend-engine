@@ -92,7 +92,7 @@ def get_daily_summaries(
             joinedload(DailyTrendSummaryDB.topic),
             joinedload(DailyTrendSummaryDB.articles).joinedload(ArticleDB.topics)
         )
-        .filter(DailyTrendSummaryDB.date == date)
+        .filter(DailyTrendSummaryDB.date <= date)
     )
 
     if topic_id is not None:

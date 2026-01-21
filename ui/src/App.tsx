@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { DailySummaryCard } from './components/DailySummaryCard';
 import { useDailySummaries } from './hooks/daily-summaries';
+import type { DailySummary } from './data-model/daily-summary';
 import './App.css';
 
 function App() {
@@ -23,12 +25,39 @@ function App() {
     });
   };
 
+  const summariesByDate = useMemo(() => {
+    if (!dailySummaries || dailySummaries.length === 0) {
+      return [];
+    }
+
+    // Group summaries by date
+    const grouped = dailySummaries.reduce((acc, summary) => {
+      const dateKey = summary.date;
+      if (!acc[dateKey]) {
+        acc[dateKey] = [];
+      }
+      acc[dateKey].push(summary);
+      return acc;
+    }, {} as Record<string, DailySummary[]>);
+
+    // Convert to array and sort by date (most recent first)
+    const sortedDates = Object.keys(grouped).sort((a, b) => {
+      return new Date(b).getTime() - new Date(a).getTime();
+    });
+
+    return sortedDates.map(date => ({
+      date,
+      formattedDate: formatDate(date),
+      summaries: grouped[date]
+    }));
+  }, [dailySummaries]);
+
   if (isLoading) {
     return (
       <div className="app-container">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p className="loading-text">Loading today's news...</p>
+          <p className="loading-text">Loading news...</p>
         </div>
       </div>
     );
@@ -45,26 +74,29 @@ function App() {
     );
   }
 
-  const summaryDate = dailySummaries && dailySummaries.length > 0
-    ? formatDate(dailySummaries[0].date)
-    : 'Today';
-
   return (
     <div className="app-container">
       <header className="app-header">
         <h1 className="app-title">Trend Engine</h1>
-        <p className="app-subtitle">{summaryDate}'s News Summary</p>
+        <p className="app-subtitle">News Summary</p>
       </header>
 
       <main className="app-main">
-        {!dailySummaries || dailySummaries.length === 0 ? (
+        {summariesByDate.length === 0 ? (
           <div className="empty-state">
-            <p>No summaries available for today.</p>
+            <p>No summaries available.</p>
           </div>
         ) : (
-          <div className="summaries-grid">
-            {dailySummaries.map(summary => (
-              <DailySummaryCard key={summary.id} summary={summary} />
+          <div className="date-sections">
+            {summariesByDate.map(({ date, formattedDate, summaries }) => (
+              <section key={date} className="date-section">
+                <h2 className="date-header">{formattedDate}</h2>
+                <div className="summaries-grid">
+                  {summaries.map(summary => (
+                    <DailySummaryCard key={summary.id} summary={summary} />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         )}
