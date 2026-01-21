@@ -79,17 +79,18 @@ def test_get_articles_with_pagination_skip(test_client, fake_articles):
 
 
 def test_get_daily_summaries_default_today(test_client_with_summaries):
-    """Test getting daily summaries defaults to today's date"""
+    """Test getting daily summaries defaults to today and returns all summaries up to today"""
     response = test_client_with_summaries.get("/daily-summaries/")
     assert response.status_code == 200
     summaries = response.json()
 
-    # Should return today's summaries (2 summaries: tech and politics)
-    assert len(summaries) == 2
+    # Should return all summaries up to today (4 total: 2 from today + 2 from yesterday)
+    assert len(summaries) == 4
 
     today = datetime.date.today()
     for summary in summaries:
-        assert summary["date"] == str(today)
+        # All summaries should be on or before today
+        assert summary["date"] <= str(today)
         assert summary["summary"] is not None
         assert "topic" in summary
         assert "articles" in summary
@@ -97,18 +98,19 @@ def test_get_daily_summaries_default_today(test_client_with_summaries):
 
 
 def test_get_daily_summaries_specific_date(test_client_with_summaries):
-    """Test filtering daily summaries by specific date"""
+    """Test filtering daily summaries up to a specific date"""
     yesterday = datetime.date.today() - datetime.timedelta(days=1)
 
     response = test_client_with_summaries.get(f"/daily-summaries/?date={yesterday}")
     assert response.status_code == 200
     summaries = response.json()
 
-    # Should return yesterday's summaries (2 summaries: tech and business)
+    # Should return summaries up to yesterday (2 summaries: tech and business from yesterday)
     assert len(summaries) == 2
 
     for summary in summaries:
-        assert summary["date"] == str(yesterday)
+        # All summaries should be on or before yesterday
+        assert summary["date"] <= str(yesterday)
         assert summary["summary"] is not None
 
 
@@ -121,17 +123,19 @@ def test_get_daily_summaries_filter_by_topic(test_client_with_summaries):
     assert response.status_code == 200
     summaries = response.json()
 
-    # Should return only technology summary for today
-    assert len(summaries) == 1
-    assert summaries[0]["topic"]["id"] == 1
-    assert summaries[0]["topic"]["name"] == "technology"
+    # Should return technology summaries up to today (2: today and yesterday)
+    assert len(summaries) == 2
+    for summary in summaries:
+        assert summary["topic"]["id"] == 1
+        assert summary["topic"]["name"] == "technology"
 
 
 def test_get_daily_summaries_no_results(test_client_with_summaries):
-    """Test daily summaries returns empty list when no data for date"""
-    future_date = datetime.date.today() + datetime.timedelta(days=30)
+    """Test daily summaries returns empty list when no data before date"""
+    # Use a date before all test data (oldest is yesterday)
+    old_date = datetime.date.today() - datetime.timedelta(days=30)
 
-    response = test_client_with_summaries.get(f"/daily-summaries/?date={future_date}")
+    response = test_client_with_summaries.get(f"/daily-summaries/?date={old_date}")
     assert response.status_code == 200
     assert len(response.json()) == 0
 
@@ -144,14 +148,17 @@ def test_get_daily_summaries_includes_articles(test_client_with_summaries):
     assert response.status_code == 200
     summaries = response.json()
 
-    # Find the technology summary
-    tech_summary = next(s for s in summaries if s["topic"]["name"] == "technology")
+    # Find today's technology summary (should be first due to desc ordering)
+    tech_summaries = [s for s in summaries if s["topic"]["name"] == "technology"]
+    # There are 2 tech summaries (today and yesterday)
+    assert len(tech_summaries) == 2
 
-    # Should have articles linked
-    assert len(tech_summary["articles"]) == 2
+    # Today's tech summary should have 2 articles
+    today_tech_summary = next(s for s in tech_summaries if s["date"] == str(today))
+    assert len(today_tech_summary["articles"]) == 2
 
     # Verify article structure
-    for article in tech_summary["articles"]:
+    for article in today_tech_summary["articles"]:
         assert "id" in article
         assert "title" in article
         assert "url" in article
