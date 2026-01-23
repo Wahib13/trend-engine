@@ -12,6 +12,14 @@ from db.connection import get_session_dependency
 from db.initialise import initialise_database
 from db.models import Article as ArticleDB, Feed, FeedType, SourceName, Source, Topic, DailyTrendSummary
 
+# Article text with more than 5 lines for summary generation tests
+SAMPLE_ARTICLE_TEXT = """This is the first line of the article.
+This is the second line with more content.
+The third line provides additional context.
+Fourth line continues the narrative.
+Fifth line adds more details.
+Sixth line ensures we have enough content for summarization."""
+
 
 @pytest.fixture
 def fake_source():
@@ -41,14 +49,16 @@ def fake_articles(fake_topics, fake_source):
             url="https://example.com/article1",
             topics=[fake_topics[0]],
             source=fake_source,
-            source_topic=FeedType.TECHNOLOGY.value
+            source_topic=FeedType.TECHNOLOGY.value,
+            text=SAMPLE_ARTICLE_TEXT
         ),
         ArticleDB(
             title="Python is cool, but my favorite language is Sarcasm",
             url="https://example.com/article2",
             topics=[fake_topics[1]],
             source=fake_source,
-            source_topic=FeedType.POLITICS.value
+            source_topic=FeedType.POLITICS.value,
+            text=SAMPLE_ARTICLE_TEXT
         ),
     ]
 
@@ -70,6 +80,7 @@ def fake_articles_with_dates(fake_topics, fake_source):
             topics=[fake_topics[0]],
             source=fake_source,
             source_topic=FeedType.TECHNOLOGY.value,
+            text=SAMPLE_ARTICLE_TEXT,
             created=datetime.datetime.combine(today, datetime.time(10, 0, 0))
         ),
         ArticleDB(
@@ -78,6 +89,7 @@ def fake_articles_with_dates(fake_topics, fake_source):
             topics=[fake_topics[0]],
             source=fake_source,
             source_topic=FeedType.TECHNOLOGY.value,
+            text=SAMPLE_ARTICLE_TEXT,
             created=datetime.datetime.combine(today, datetime.time(18, 30, 0))
         ),
         # Article from yesterday
@@ -87,6 +99,7 @@ def fake_articles_with_dates(fake_topics, fake_source):
             topics=[fake_topics[1]],
             source=fake_source,
             source_topic=FeedType.POLITICS.value,
+            text=SAMPLE_ARTICLE_TEXT,
             created=datetime.datetime.combine(yesterday, datetime.time(10, 0, 0))
         ),
         # Article from 2 days ago
@@ -96,6 +109,7 @@ def fake_articles_with_dates(fake_topics, fake_source):
             topics=[fake_topics[2]],
             source=fake_source,
             source_topic=FeedType.BUSINESS.value,
+            text=SAMPLE_ARTICLE_TEXT,
             created=datetime.datetime.combine(two_days_ago, datetime.time(15, 30, 0))
         ),
         # Article from a week ago
@@ -105,6 +119,7 @@ def fake_articles_with_dates(fake_topics, fake_source):
             topics=[fake_topics[3]],
             source=fake_source,
             source_topic=FeedType.HEALTH.value,
+            text=SAMPLE_ARTICLE_TEXT,
             created=datetime.datetime.combine(week_ago, datetime.time(9, 0, 0))
         ),
     ]
