@@ -24,6 +24,13 @@ def test_get_topic(
     assert response.json()["id"] == test_id
 
 
+def test_get_topic_not_found(test_client):
+    """Test that requesting a non-existent topic returns 404"""
+    response = test_client.get("/topic/99999/")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Topic not found"
+
+
 def test_get_articles(
         test_client,
         fake_articles,
@@ -43,6 +50,13 @@ def test_get_article(
     response = test_client.get(f"/article/{test_id}/")
     assert response.status_code == 200
     assert response.json()["id"] == test_id
+
+
+def test_get_article_not_found(test_client):
+    """Test that requesting a non-existent article returns 404"""
+    response = test_client.get("/article/99999/")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Article not found"
 
 
 def test_get_articles_with_topic_filter(test_client, fake_articles):

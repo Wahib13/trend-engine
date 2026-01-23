@@ -85,6 +85,13 @@ def generate_article_summaries(
 
     for i, article in enumerate(articles):
         logger.info(f"summarising article {i + 1}/{len(articles)}. id: {article.id}, title: {article.title}")
+
+        # Skip articles with 5 lines or fewer
+        line_count = len(article.text.splitlines()) if article.text else 0
+        if line_count <= 5:
+            logger.info(f"Skipping article {article.id}: only {line_count} lines (minimum 6 required)")
+            continue
+
         article.summary = generate_summary(
             f"Summarize the following article. in one sentence\n\n{article.text}",
             llm_client,
@@ -140,7 +147,7 @@ def generate_daily_summary(
             logger.warning(f"No articles with summaries found for topic {topic.name}, skipping")
             continue
 
-        topic_summaries = "\n\n".join(article.summary for article in articles_with_summaries)
+        topic_summaries = " ".join(article.summary for article in articles_with_summaries)
         daily_topic_summary = generate_summary(
             topic_summaries,
             llm_client,

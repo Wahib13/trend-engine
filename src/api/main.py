@@ -1,6 +1,6 @@
 import datetime
 
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Depends, Query, HTTPException
 from sqlalchemy.orm import joinedload
 from starlette.middleware.cors import CORSMiddleware
 
@@ -55,6 +55,8 @@ def get_topic(
         session=Depends(get_session_dependency)
 ) -> Topic:
     topic = session.query(TopicDB).filter_by(id=topic_id).first()
+    if topic is None:
+        raise HTTPException(status_code=404, detail="Topic not found")
     return topic
 
 
@@ -64,6 +66,8 @@ def get_article(
         session=Depends(get_session_dependency)
 ) -> Article:
     article = session.query(ArticleDB).filter_by(id=article_id).first()
+    if article is None:
+        raise HTTPException(status_code=404, detail="Article not found")
     return article
 
 

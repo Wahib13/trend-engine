@@ -2,7 +2,7 @@ import datetime
 
 from db.models import Article, DailyTrendSummary, Topic
 from summary.main import generate_article_summaries, generate_daily_summary
-from tests.conftest import FakeLLM
+from tests.conftest import FakeLLM, SAMPLE_ARTICLE_TEXT
 
 
 def test_generate_summary_for_articles(db_session):
@@ -256,3 +256,69 @@ def test_generate_daily_summary_no_articles_with_summaries(db_session_with_dated
     # No daily summaries should be created since articles have no summaries
     daily_summaries = db_session_with_dated_articles.query(DailyTrendSummary).all()
     assert len(daily_summaries) == 0, "Should not create daily summaries when articles have no summaries"
+
+
+def test_generate_article_summaries_skips_short_articles(db_session, fake_source):
+    """Test that articles with 5 or fewer lines are skipped during summarization"""
+    # Get the source from the database (it was added via fixtures)
+    source = db_session.query(Article).first().source
+
+    # Add a short article (5 lines or fewer)
+    short_article = Article(
+        title="Short Article",
+        url="https://example.com/short",
+        source_topic="technology",
+        source=source,
+        text="Line 1\nLine 2\nLine 3\nLine 4\nLine 5"  # Exactly 5 lines
+    )
+    db_session.add(short_article)
+
+    # Add a long article (more than 5 lines)
+    long_article = Article(
+        title="Long Article",
+        url="https://example.com/long",
+        source_topic="technology",
+        source=source,
+        text=SAMPLE_ARTICLE_TEXT  # 6 lines
+    )
+    db_session.add(long_article)
+    db_session.commit()
+
+    # Generate summaries
+    generate_article_summaries(db_session, FakeLLM("llama3.1:8b"))
+
+    # Refresh from database
+    db_session.refresh(short_article)
+    db_session.refresh(long_article)
+
+    # Short article should not have a summary
+    assert short_article.summary is None, "Article with 5 lines should not be summarized"
+
+    # Long article should have a summary
+    assert long_article.summary is not None, "Article with more than 5 lines should be summarized"
+
+
+def test_generate_article_summaries_skips_empty_text(db_session, fake_source):
+    """Test that articles with no text are skipped during summarization"""
+    # Get the source from the database (it was added via fixtures)
+    source = db_session.query(Article).first().source
+
+    # Add an article with no text
+    empty_article = Article(
+        title="Empty Article",
+        url="https://example.com/empty",
+        source_topic="technology",
+        source=source,
+        text=None
+    )
+    db_session.add(empty_article)
+    db_session.commit()
+
+    # Generate summaries
+    generate_article_summaries(db_session, FakeLLM("llama3.1:8b"))
+
+    # Refresh from database
+    db_session.refresh(empty_article)
+
+    # Empty article should not have a summary
+    assert empty_article.summary is None, "Article with no text should not be summarized"
