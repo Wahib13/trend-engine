@@ -44,8 +44,13 @@ cp .env.example .env
 cp ui/.env.example ui/.env
 ```
 
-4. Initialize the database:
+4. Setup the database:
 
+```commandline
+alembic upgrade head
+```
+
+Create default sample data:
 ```commandline
 cd src/
 python -m scripts.init_db
