@@ -1,4 +1,4 @@
-from db.connection import engine, get_session
+from db.connection import get_session
 from db.initialise import initialise_database
 from db.models import Source, SourceName, FeedType, Feed, Topic
 
@@ -24,4 +24,4 @@ if __name__ == "__main__":
             Topic(name=FeedType.BUSINESS.value),
             Topic(name=FeedType.HEALTH.value),
         ]
-        initialise_database(engine, session, [source_bbc, source_the_guardian, *default_topics])
+        initialise_database(session, [source_bbc, source_the_guardian, *default_topics])
