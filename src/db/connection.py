@@ -10,30 +10,54 @@ import config
 
 logger = logging.getLogger(__name__)
 
-engine = create_engine(
-    config.settings.DATABASE_CONNECTION_STRING,
-    echo=config.settings.DEBUG,
-)
+Base = declarative_base()
 
-if config.settings.DEBUG:
-    @event.listens_for(engine, "before_cursor_execute")
+# The engine and session factory are created lazily on first use rather than at
+# import time, so importing this module (for Base, get_session, etc.) does not
+# require a DATABASE_CONNECTION_STRING. Tests, alembic and tooling can import it
+# with no .env; a genuinely missing/invalid URL then fails loudly at first DB
+# use instead of as a cryptic import-time error.
+_engine = None
+_session_maker = None
+
+
+def _register_debug_listeners(target_engine) -> None:
+    @event.listens_for(target_engine, "before_cursor_execute")
     def before_cursor_execute(conn, cursor, statement, parameters, context, executemany) -> None:
         conn.info.setdefault("query_start_time", []).append(time.perf_counter())
         logger.warning("SQL query start")
 
-    @event.listens_for(engine, "after_cursor_execute")
+    @event.listens_for(target_engine, "after_cursor_execute")
     def after_cursor_execute(conn, cursor, statement, parameters, context, executemany) -> None:
         total = time.perf_counter() - conn.info["query_start_time"].pop()
         logger.warning("SQL query end duration=%.3fs", total)
 
-session_maker_instance = sessionmaker(bind=engine)
 
-Base = declarative_base()
+def get_engine():
+    global _engine
+    if _engine is None:
+        url = config.settings.DATABASE_CONNECTION_STRING
+        if not url:
+            raise RuntimeError(
+                "DATABASE_CONNECTION_STRING is not set. "
+                "Set it in the environment or .env before using the database."
+            )
+        _engine = create_engine(url, echo=config.settings.DEBUG)
+        if config.settings.DEBUG:
+            _register_debug_listeners(_engine)
+    return _engine
+
+
+def get_session_maker():
+    global _session_maker
+    if _session_maker is None:
+        _session_maker = sessionmaker(bind=get_engine())
+    return _session_maker
 
 
 @contextmanager
 def get_session() -> Generator[Session, Any, None]:
-    db = session_maker_instance()
+    db = get_session_maker()()
     try:
         yield db
     finally:
