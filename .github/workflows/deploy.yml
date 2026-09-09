@@ -57,7 +57,14 @@ jobs:
 
       - name: Build UI
         working-directory: ui
+        env:
+          # Vite inlines import.meta.env.VITE_* at build time. Locally this comes
+          # from ui/.env (gitignored); the runner needs it supplied here or the
+          # bundle ships `undefined` for the API base and the app crashes.
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: |
+          set -euo pipefail
+          test -n "$VITE_API_BASE_URL" || { echo "VITE_API_BASE_URL variable is not set"; exit 1; }
           npm ci
           npm run build
 
