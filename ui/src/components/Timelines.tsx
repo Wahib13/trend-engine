@@ -63,7 +63,6 @@ export function Timelines({ ref, topics, active, onActiveChange, collapseRange, 
   const reportedRef = useRef<number | null>(null);
   /** Destination of an in-flight programmatic scroll; intermediate panels it passes are not reported. */
   const targetRef = useRef<number | null>(null);
-  const mountedRef = useRef(false);
 
   useImperativeHandle(
     ref,
@@ -82,15 +81,14 @@ export function Timelines({ ref, topics, active, onActiveChange, collapseRange, 
     const el = scrollerRef.current;
     if (!el || reportedRef.current === activeIndex) return;
     const left = activeIndex * el.clientWidth;
-    const smooth = mountedRef.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    mountedRef.current = true;
+    // Clicking a tab jumps straight to it — no horizontal animation between tabs.
     // Already there (e.g. index 0 on mount): no scroll event will follow, so don't wait for one.
     if (Math.abs(el.scrollLeft - left) < 1) {
       reportedRef.current = activeIndex;
       return;
     }
     targetRef.current = activeIndex;
-    el.scrollTo({ left, behavior: smooth ? 'smooth' : 'instant' });
+    el.scrollTo({ left, behavior: 'instant' });
   }, [activeIndex]);
 
   function handleScroll() {
