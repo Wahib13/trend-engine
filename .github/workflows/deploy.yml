@@ -72,13 +72,16 @@ jobs:
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
       # Ship the built UI. --delete removes stale hashed bundles from a prior build.
-      # WEB_ROOT is owned by SSH_USER with group `web` (setgid) so no sudo is needed;
-      # --chmod forces owner rw / group (web, incl. www-data) r / no world access,
-      # regardless of the perms the runner's checkout carried.
+      # WEB_ROOT is owned by SSH_USER, which is a member of group `web` (nginx's
+      # www-data is also in `web`). --chown=:web forces every transferred file and
+      # subdir to group `web` on each deploy — not relying on the setgid bit, which
+      # rsync's --chmod can strip off subdirs like assets/ and cause 403s.
+      # --chmod then sets owner rw / group r / no world access.
       - name: Upload built UI
         run: |
           set -euo pipefail
           rsync -rlptz --delete \
+            --chown=:web \
             --chmod=Du=rwx,Dg=rx,Do=,Fu=rw,Fg=r,Fo= \
             -e "ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes" \
             ui/dist/ "$SSH_USER@$SSH_HOST:$WEB_ROOT/"
