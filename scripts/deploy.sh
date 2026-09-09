@@ -28,7 +28,11 @@ git reset --hard origin/main
 echo "==> Installing Python deps + running migrations"
 # shellcheck disable=SC1091
 source "$VENV_PATH/bin/activate"
-pip install -r requirements.txt
+# torch's Linux wheel (with CUDA deps) is multi-GB; pip extracts into TMPDIR,
+# and the default /tmp here is a small (2G) tmpfs. Point it at the real disk.
+PIP_TMPDIR="$DEPLOY_PATH/.pip-tmp"
+mkdir -p "$PIP_TMPDIR"
+TMPDIR="$PIP_TMPDIR" pip install -r requirements.txt
 # alembic.ini and env.py live in src/; env.py reads DATABASE_CONNECTION_STRING
 # from ../.env, so migrations must run from src/ on the server.
 ( cd src && alembic upgrade head )
