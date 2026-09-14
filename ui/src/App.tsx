@@ -90,7 +90,22 @@ function App() {
     [days],
   );
   const topics = useMemo(() => [...TOPICS, ...extraTopics], [extraTopics]);
-  const isTopic = useCallback((text: string) => topics.includes(text), [topics]);
+
+  // On a source page the strip is narrowed to keywords this source actually covered in the window;
+  // a keyword the source never wrote about would otherwise be an empty, dead-end tab. Home and the
+  // search page (source === null) keep the full strip.
+  const visibleTopics = useMemo(() => {
+    if (source === null) return topics;
+    const covered = new Set<string>();
+    for (const day of days) {
+      for (const kw of day.keywords ?? []) {
+        if (topics.includes(kw.text) && kw.articles.some((a) => a.source_name === source)) covered.add(kw.text);
+      }
+    }
+    return topics.filter((text) => covered.has(text));
+  }, [topics, days, source]);
+  const fixedCount = useMemo(() => TOPICS.filter((text) => visibleTopics.includes(text)).length, [visibleTopics]);
+  const isTopic = useCallback((text: string) => visibleTopics.includes(text), [visibleTopics]);
 
   // The active timeline by keyword text; null = "All". Carries over between Home and source pages.
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
@@ -203,7 +218,7 @@ function App() {
           </div>
         )}
 
-        {!isSearchPage && <TopicTabs topics={topics} fixedCount={TOPICS.length} active={activeTopic} onSelect={selectTopic} />}
+        {!isSearchPage && <TopicTabs topics={visibleTopics} fixedCount={fixedCount} active={activeTopic} onSelect={selectTopic} />}
       </header>
 
       {isSearchPage ? (
@@ -224,7 +239,7 @@ function App() {
         <Timelines
           key={source ?? '\0home'}
           ref={timelinesRef}
-          topics={topics}
+          topics={visibleTopics}
           active={activeTopic}
           onActiveChange={setActiveTopic}
           days={days}
